@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab de Teoria da Computação - Aula 10</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #00ffcc;
+            --secondary: #ff0077;
+            --warning: #ffcc00;
+            --bg: #0f111a;
+            --card: #1a1c2a;
+            --text: #e0e0e0;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        nav {
+            width: 100%;
+            background: #05060a;
+            padding: 15px 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            border-bottom: 2px solid #222;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav button {
+            background: transparent;
+            border: 1px solid #333;
+            color: #888;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: bold;
+        }
+
+        nav button.active-turing { border-color: var(--primary); color: var(--primary); }
+        nav button.active-all { border-color: var(--secondary); color: var(--secondary); }
+        nav button.active-comp { border-color: var(--warning); color: var(--warning); }
+
+        .container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            width: 100%;
+            max-width: 900px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .theory-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 4px solid var(--primary);
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 0 12px 12px 0;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: left;
+        }
+
+        .theory-card h3 { margin-top: 0; text-transform: uppercase; font-size: 1.1em; }
+        
+        .tape-wrapper {
+            display: flex;
+            background: #000;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow-x: auto;
+            border: 1px solid #333;
+        }
+
+        .cell {
+            min-width: 45px;
+            height: 45px;
+            border: 1px solid #222;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+        }
+
+        .turing-active { background: var(--primary); color: #000; font-weight: bold; box-shadow: 0 0 15px var(--primary); }
+        .all-active { background: var(--secondary); color: #fff; font-weight: bold; box-shadow: 0 0 15px var(--secondary); }
+        .warning-active { background: var(--warning); color: #000; font-weight: bold; box-shadow: 0 0 15px var(--warning); }
+
+        .controls { text-align: center; margin-bottom: 10px; }
+        
+        input {
+            background: #000; border: 1px solid #444; color: #fff;
+            padding: 10px; border-radius: 4px; margin-bottom: 10px; text-align: center;
+        }
+
+        .btn {
+            border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; border-radius: 4px; margin: 5px;
+        }
+
+        .status-box { font-size: 0.9em; margin-top: 10px; min-height: 20px; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <button id="nav-turing" onclick="showPage('turing')" class="active-turing">Máquina de Turing</button>
+        <button id="nav-all" onclick="showPage('all')">Autômato Limitado (ALL)</button>
+        <button id="nav-comp" onclick="showPage('comp')">Gráfico de Complexidade</button>
+    </nav>
+
+    <section id="page-turing" class="container" style="display: flex;">
+        <h1 style="color: var(--primary);">Máquina de Turing (MT)</h1>
+        <p class="description">Modelo universal que define os limites do que pode ser processado.</p>
+        
+        <div class="theory-card">
+            <h3>Teoria da Computabilidade: A Existência de Algoritmos</h3>
+            <p>A <b>Computabilidade</b> investiga os limites do que pode ser resolvido por máquinas. Segundo o modelo de Turing, um problema é <b>computável</b> se for possível construir uma MT que execute um número finito de passos e pare (Halt) com a resposta.</p>
+            <ul>
+                <li><b>O Conceito:</b> A MT é o "juiz supremo". Se ela não resolve, o problema é incomputável.</li>
+                <li><b>No Simulador:</b> A inversão de bits prova a existência de um algoritmo funcional.</li>
+            </ul>
+            <div class="tape-wrapper" id="tape-turing-comp"></div>
+            <div class="controls">
+                <input type="text" id="in-turing-comp" value="1011">
+                <button class="btn" style="background: var(--primary);" onclick="runTuringComp()">Validar Existência (Algoritmo)</button>
+                <div id="st-turing-comp" class="status-box">Status: Aguardando prova de conceito...</div>
+            </div>
+        </div>
+
+        <div class="theory-card" style="border-left-color: var(--warning);">
+            <h3 style="color: var(--warning);">Teoria da Complexidade: A Eficiência de Recursos</h3>
+            <p>A <b>Complexidade</b> foca no custo da solução em computadores reais, tratando da eficiência da computação em termos de recursos exigidos.</p>
+            <ul>
+                <li><b>Complexidade Temporal:</b> Medida pelo número de transições (passos) realizados.</li>
+                <li><b>Complexidade Espacial:</b> Medida pela quantidade de células (memória) utilizadas.</li>
+            </ul>
+            <div class="tape-wrapper" id="tape-turing-size"></div>
+            <div class="controls">
+                <input type="text" id="in-turing-size" value="111">
+                <button class="btn" style="background: var(--warning);" onclick="runTuringSize()">Medir Custo (Tempo/Espaço)</button>
+                <div id="st-turing-size" class="status-box" style="color: var(--warning);">Passos: 0 | Espaço: 0</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="page-all" class="container">
+        <h1 style="color: var(--secondary);">Autômato Linearmente Limitado (ALL)</h1>
+        
+        <div class="theory-card" style="border-left-color: var(--secondary);">
+            <h3 style="color: var(--secondary);">Teoria da Computabilidade: Linguagens Sensíveis ao Contexto</h3>
+            <p>O ALL prova que linguagens complexas possuem algoritmos de decisão. Ele reconhece padrões que exigem contagem sincronizada, como <b>aⁿbⁿcⁿ</b>, impossíveis para autômatos simples.</p>
+            <div class="tape-wrapper" id="tape-all-comp"></div>
+            <div class="controls">
+                <input type="text" id="in-all-comp" value="aabbcc">
+                <button class="btn" style="background: var(--secondary); color: #fff;" onclick="runAllComp()">Reconhecer Linguagem</button>
+                <div id="st-all-comp" class="status-box" style="color: var(--secondary);">Status: Aguardando decisão...</div>
+            </div>
+        </div>
+
+        <div class="theory-card" style="border-left-color: var(--warning);">
+            <h3 style="color: var(--warning);">Teoria da Complexidade: Limite Espacial O(n)</h3>
+            <p>O ALL exemplifica o limite de recursos. Ele representa algoritmos onde o armazenamento é proporcional ao comprimento da entrada (n), operando em <b>espaço linear</b>.</p>
+            <div class="tape-wrapper" id="tape-all-space"></div>
+            <div class="controls">
+                <input type="text" id="in-all-space" value="abc">
+                <button class="btn" style="background: var(--warning);" onclick="runAllSpace()">Analisar Uso de Memória</button>
+                <div id="st-all-space" class="status-box" style="color: var(--warning);">Uso: 0/0 células</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="page-comp" class="container">
+        <h1>Análise de Crescimento</h1>
+        <div class="theory-card" style="border-left-color: var(--warning);">
+            <h3 style="color: var(--warning);">Crescimento de Funções</h3>
+            <p>Este gráfico ilustra como o custo computacional explode em algoritmos não-polinomiais, tornando o problema inviável mesmo que ele seja computável.</p>
+            <div style="background: #fff; padding: 15px; border-radius: 8px;">
+                <canvas id="complexityChart"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Variável global para armazenar a instância do gráfico
+        let myChart = null;
+
+        function showPage(page) {
+            ['turing', 'all', 'comp'].forEach(p => {
+                document.getElementById('page-' + p).style.display = 'none';
+                document.getElementById('nav-' + p).className = '';
+            });
+            document.getElementById('page-' + page).style.display = 'flex';
+            document.getElementById('nav-' + page).className = 'active-' + page;
+            
+            // Dispara a renderização do gráfico apenas quando entra na página de complexidade
+            if (page === 'comp') {
+                // Pequeno delay para garantir que o canvas esteja visível antes de renderizar
+                setTimeout(renderChart, 100);
+            }
+        }
+
+        // LÓGICA TURING - COMPUTABILIDADE
+        async function runTuringComp() {
+            let val = document.getElementById('in-turing-comp').value.split('');
+            let head = 0;
+            const st = document.getElementById('st-turing-comp');
+            const tape = document.getElementById('tape-turing-comp');
+
+            while (head < val.length) {
+                tape.innerHTML = val.map((v, i) => `<div class="cell ${i === head ? 'turing-active' : ''}">${v}</div>`).join('');
+                st.textContent = "Computando existência de solução...";
+                await new Promise(r => setTimeout(r, 400));
+                val[head] = val[head] === '0' ? '1' : '0';
+                head++;
+            }
+            tape.innerHTML = val.map((v, i) => `<div class="cell">${v}</div>`).join('');
+            st.textContent = "✔ COMPUTÁVEL: Algoritmo construído e finalizado.";
+        }
+
+        // LÓGICA TURING - COMPLEXIDADE
+        async function runTuringSize() {
+            let val = document.getElementById('in-turing-size').value.split('');
+            let head = 0; let steps = 0;
+            const st = document.getElementById('st-turing-size');
+            const tape = document.getElementById('tape-turing-size');
+
+            while (head < val.length) {
+                steps++;
+                tape.innerHTML = val.map((v, i) => `<div class="cell ${i === head ? 'warning-active' : ''}">${v}</div>`).join('');
+                st.textContent = `Passos: ${steps} | Espaço: ${val.length} | Tempo: ${steps * 400}ms`;
+                await new Promise(r => setTimeout(r, 400));
+                head++;
+            }
+            tape.innerHTML = val.map((v, i) => `<div class="cell">${v}</div>`).join('');
+            st.innerHTML = `<b>Resultado:</b> Complexidade Linear O(n) medida.`;
+        }
+
+        // LÓGICA ALL - COMPUTABILIDADE
+        async function runAllComp() {
+            let input = document.getElementById('in-all-comp').value;
+            let val = ['[', ...input.split(''), ']'];
+            let head = 1;
+            const st = document.getElementById('st-all-comp');
+            const tape = document.getElementById('tape-all-comp');
+
+            st.textContent = "Iniciando validação aⁿbⁿcⁿ...";
+            
+            while (val.includes('a')) {
+                head = val.indexOf('a');
+                val[head] = 'X';
+                tape.innerHTML = val.map((v, i) => `<div class="cell ${i === head ? 'all-active' : ''}">${v}</div>`).join('');
+                st.textContent = "Marcando 'a'...";
+                await new Promise(r => setTimeout(r, 400));
+
+                let bIdx = val.indexOf('b');
+                if (bIdx === -1) { st.textContent = "✘ Erro: Falta de 'b'. Rejeitado."; return; }
+                head = bIdx;
+                val[head] = 'X';
+                tape.innerHTML = val.map((v, i) => `<div class="cell ${i === head ? 'all-active' : ''}">${v}</div>`).join('');
+                st.textContent = "Marcando 'b' correspondente...";
+                await new Promise(r => setTimeout(r, 400));
+
+                let cIdx = val.indexOf('c');
+                if (cIdx === -1) { st.textContent = "✘ Erro: Falta de 'c'. Rejeitado."; return; }
+                head = cIdx;
+                val[head] = 'X';
+                tape.innerHTML = val.map((v, i) => `<div class="cell ${i === head ? 'all-active' : ''}">${v}</div>`).join('');
+                st.textContent = "Marcando 'c' correspondente...";
+                await new Promise(r => setTimeout(r, 400));
+            }
+
+            if (val.includes('b') || val.includes('c')) {
+                st.textContent = "✘ Erro: Quantidades desiguais. Rejeitado.";
+            } else {
+                st.textContent = "✔ Sucesso: Cadeia aceita pelo ALL!";
+            }
+        }
+
+        // LÓGICA ALL - COMPLEXIDADE (ESPAÇO)
+        async function runAllSpace() {
+            let inputVal = document.getElementById('in-all-space').value;
+            if (!inputVal) return;
+
+            let val = ['[', ...inputVal.split(''), ']'];
+            let head = 1;
+            const st = document.getElementById('st-all-space');
+            const tape = document.getElementById('tape-all-space');
+            
+            while (head < val.length - 1) {
+                tape.innerHTML = val.map((v, i) => `<div class="cell ${i === head ? 'warning-active' : ''}">${v}</div>`).join('');
+                st.textContent = `Célula Atual: ${head} | Memória: ${head}/${inputVal.length}`;
+                await new Promise(r => setTimeout(r, 400));
+                head++;
+            }
+            st.innerHTML = `<b>Análise Final:</b> Espaço O(n) confirmado.`;
+        }
+
+        // FUNÇÃO DO GRÁFICO (CHART.JS)
+        function renderChart() {
+            const ctx = document.getElementById('complexityChart').getContext('2d');
+            
+            // Se já existir um gráfico, destrói para criar um novo (evita bugs visuais)
+            if (myChart) {
+                myChart.destroy();
+            }
+
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [1, 2, 4, 8, 16, 32],
+                    datasets: [
+                        { 
+                            label: 'O(n) - Linear', 
+                            data: [1, 2, 4, 8, 16, 32], 
+                            borderColor: '#00ffcc',
+                            tension: 0.1 
+                        },
+                        { 
+                            label: 'O(n²) - Quadrática', 
+                            data: [1, 4, 16, 64, 256, 1024], 
+                            borderColor: '#ffcc00',
+                            tension: 0.1
+                        },
+                        { 
+                            label: 'O(2ⁿ) - Exponencial', 
+                            data: [2, 4, 16, 256, 65536, 4294967296], 
+                            borderColor: '#ff0077',
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'logarithmic',
+                            title: { display: true, text: 'Operações (Escala Log)' }
+                        },
+                        x: {
+                            title: { display: true, text: 'Tamanho da Entrada (n)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#333' } }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
